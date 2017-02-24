@@ -10,16 +10,31 @@ datas = []
 labels = []
 str_labels = []
 
+NUM_OF_IMAGES = 0
+IMAGE_H = 0
+IMAGE_W = 0
+DIGITS = 4
+
 with open("/Users/baidu/dev/go_workspace/src/github.com/zhangfaen/captcha/capgen/xx/data.csv") as f:
-	for line in f:
-		cols = line.split(",")
-		cols_len = len(cols)
-		data = np.array(cols[1:], dtype = "float32")
+	header = f.readline().split(",")
+	NUM_OF_IMAGES = int(header[0])
+	IMAGE_H = int(header[1])
+	IMAGE_W = int(header[2])
+
+	for i in xrange(NUM_OF_IMAGES) :
+		str_label = f.readline().strip()
+		str_labels.append(str_label)
+		data = np.zeros(IMAGE_H * IMAGE_W, dtype = "float32")
+		for r in xrange(IMAGE_H) :
+			cols = f.readline().split(",")
+			for j in xrange(IMAGE_W) :
+				data[r * IMAGE_W + j] = np.float32(cols[j])
+
 		datas.append(data)
-		str_labels.append(cols[0])
-		label = np.zeros(4 * 10, dtype = "float32")
+
+		label = np.zeros(DIGITS * 10, dtype = "float32")
 		index = 0
-		for c in cols[0]:
+		for c in str_label:
 			for i in xrange(0, 10) :
 				if c != str(i):
 					label[index] = 0
@@ -28,7 +43,6 @@ with open("/Users/baidu/dev/go_workspace/src/github.com/zhangfaen/captcha/capgen
 				index = index + 1
 		# print cols[0], "  ", label
 		labels.append(label)
-
 
 train_datas = np.vstack(datas[0:len(datas) * 9 / 10])
 train_labels = np.vstack(labels[0:len(labels) * 9 / 10])
@@ -61,7 +75,7 @@ model.compile(loss='categorical_crossentropy',
               optimizer='adadelta',
               metrics=['accuracy'])
 
-model.fit(np.vstack(train_datas), np.vstack(train_labels), nb_epoch=2000, batch_size=32)
+model.fit(np.vstack(train_datas), np.vstack(train_labels), nb_epoch=200, batch_size=32)
 
 outputs = model.predict(test_datas)
 
@@ -85,7 +99,9 @@ for i in xrange(len(outputs)) :
 	if test_str_labels[i] == get_code_from_output(outputs[i]):
 		correct = correct + 1
 
+# total: 500, correct:108
 print "total: " + str(len(outputs)) + ", correct:" + str(correct)
+
 
 
 

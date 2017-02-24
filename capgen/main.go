@@ -9,6 +9,7 @@ import (
 	"log"
 	"os"
 	"strings"
+	"bytes"
 
 	"github.com/zhangfaen/captcha"
 )
@@ -29,11 +30,8 @@ func usage() {
 }
 
 // Get the bi-dimensional pixel array
-func getPixels(path string) ([][]Pixel, error) {
-
-	file, err := os.Open(path)
-	defer file.Close()
-	img, _, err := image.Decode(file)
+func getPixels(buf *bytes.Buffer) ([][]Pixel, error) {
+	img, _, err := image.Decode(buf)
 
 	if err != nil {
 		return nil, err
@@ -71,16 +69,19 @@ func printCSV(pixels [][]Pixel) string {
 	ret := ""
 	for i := 0; i < len(pixels); i++ {
 		for j := 0; j < len(pixels[i]); j++ {
-			if pixels[i][j].R+pixels[i][j].G+pixels[i][j].B > 0 {
-				fmt.Print("1 ")
-				ret = ret + "," + "1"
+			gray := pixels[i][j].R+pixels[i][j].G+pixels[i][j].B
+			placeHolder := ","
+			if j == 0 {
+				placeHolder = ""
+			}
+			if gray > 100 {
+				ret = ret + placeHolder + fmt.Sprint("1")
 			} else {
-				fmt.Print("  ")
-				ret = ret + "," + "0"
+				ret = ret + placeHolder + "0"
 			}
 
 		}
-		fmt.Println()
+		ret = ret + "\n"
 	}
 	return ret
 }
@@ -94,29 +95,33 @@ func main() {
 	}
 	os.MkdirAll(fname, 0777)
 	csvFile, _ := os.Create(fname + "data.csv")
+	fmt.Fprintln(csvFile, "" + fmt.Sprint(*flagNumOfImages) + "," + fmt.Sprint(*flagImgH) + "," + fmt.Sprint(*flagImgW))
 	for i := 0; i < *flagNumOfImages; i++ {
 		d := captcha.RandomDigits(*flagLen)
 		s := fmt.Sprintln(d)
 		s = s[1 : len(s)-2]
 		s = strings.Replace(s, " ", "", -1)
 		csvLine := s
-		s = fname + s + ".png"
-		f, err := os.Create(s)
-		if err != nil {
-			log.Fatalf("%s", err)
-		}
-
 		w := captcha.NewImage("", d, *flagImgW, *flagImgH)
-		_, err = w.WriteTo(f)
-		if err != nil {
-			log.Fatalf("%s", err)
+		var buf *bytes.Buffer = new(bytes.Buffer)
+		w.WriteTo(buf)
+		if i % 100 == 1 {
+			s = fname + s + ".png"
+			f, err := os.Create(s)
+			if err != nil {
+				log.Fatalf("%s", err)
+			}
+			_, err = w.WriteTo(f)
+			if err != nil {
+				log.Fatalf("%s", err)
+			}
+			f.Close()
 		}
-		f.Close()
 
-		pixels, _ := getPixels(s)
-		csvLine = csvLine + printCSV((pixels))
+		pixels, _ := getPixels(buf)
 		fmt.Fprintln(csvFile, csvLine)
-		fmt.Println(d)
+		fmt.Fprint(csvFile, printCSV((pixels)))
+		// fmt.Println(d)
 	}
 	csvFile.Close()
 
