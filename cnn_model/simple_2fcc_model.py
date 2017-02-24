@@ -15,7 +15,7 @@ IMAGE_H = 0
 IMAGE_W = 0
 DIGITS = 4
 
-with open("/Users/baidu/dev/go_workspace/src/github.com/zhangfaen/captcha/capgen/xx/data.csv") as f:
+with open("../capgen/data/data.csv") as f:
 	header = f.readline().split(",")
 	NUM_OF_IMAGES = int(header[0])
 	IMAGE_H = int(header[1])
@@ -60,7 +60,7 @@ model.add(Dense(40, activation='softmax'))
 
 
 from keras.utils.visualize_util import plot
-plot(model, show_shapes=True, to_file='model.png')
+plot(model, show_shapes=True, to_file='simple_2fcc_model.png')
 
 def my_accuracy(y_true, y_pred):
     #print (y_true)
