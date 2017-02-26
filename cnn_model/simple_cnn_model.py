@@ -72,11 +72,11 @@ x2 = Dense(10, activation='softmax')(x)
 x3 = Dense(10, activation='softmax')(x)
 x4 = Dense(10, activation='softmax')(x)
 
-# x = merge([x1, x2, x3, x4], mode = "concat")
+x = merge([x1, x2, x3, x4], mode = "concat")
 
-# output = Dense(40, activation='softmax')(x)
+output = Dense(40, activation='softmax')(x)
 
-model = Model(input=inputs, output=[x1, x2, x3, x4])
+model = Model(input=inputs, output=output)
 
 from keras.utils.visualize_util import plot
 plot(model, show_shapes=True, to_file='simple_cnn_model.png')
