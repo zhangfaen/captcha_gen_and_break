@@ -95,7 +95,7 @@ model.compile(loss='categorical_crossentropy',
               optimizer='Adam',
               metrics=['accuracy'])
 
-model.fit(train_datas, [train_labels0, train_labels1, train_labels2, train_labels3], nb_epoch=20, batch_size=32)
+model.fit(train_datas, [train_labels0, train_labels1, train_labels2, train_labels3], nb_epoch=50, batch_size=32)
 
 outputs = model.predict(test_datas)
 
