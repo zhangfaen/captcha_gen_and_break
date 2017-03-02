@@ -1,7 +1,7 @@
 from image import ImageCaptcha
 import random
 image = ImageCaptcha(fonts=['comic.ttf'])
-data_dir = 'pydata/'
+data_dir = 'data/'
 labels_path = data_dir + 'labels.txt'
 labels_file = open(labels_path,'w')
 for i in xrange(5000) :

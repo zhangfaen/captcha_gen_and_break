@@ -70,7 +70,7 @@ def get_cnn_net():
     return model
 
 
-(train_datas,train_labels,test_datas,test_labels) = load_data('../capgen/pydata/',0.9)
+(train_datas,train_labels,test_datas,test_labels) = load_data('../gen/data/',0.9)
 
 model = get_cnn_net()
 model.fit(train_datas, train_labels,
