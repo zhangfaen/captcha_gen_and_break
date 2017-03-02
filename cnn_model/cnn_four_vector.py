@@ -74,7 +74,15 @@ def get_cnn_net():
 model = get_cnn_net()
 model.fit(train_datas, list(np.transpose(train_labels,(1,0,2))),
          nb_epoch=20, batch_size=32)
-
-loss_and_metrics = model.evaluate(test_datas, list(np.transpose(test_labels,(1,0,2))), batch_size=32)
-print  '\nmodel evaluate:\n','\n'.join(map(lambda x:str(x),zip(model.metrics_names,loss_and_metrics)))
-
+predict_labels = model.predict(test_datas,batch_size=32)
+test_size = len(test_labels)
+y1 = test_labels[:,0,:].argmax(1) == predict_labels[0].argmax(1)
+y2 = test_labels[:,1,:].argmax(1) == predict_labels[1].argmax(1)
+y3 = test_labels[:,2,:].argmax(1) == predict_labels[2].argmax(1)
+y4 = test_labels[:,3,:].argmax(1) == predict_labels[3].argmax(1)
+acc = (y1 * y2 * y3 * y4 ).sum() * 1.0
+print  '\nmodel evaluate:\nacc:', acc/test_size
+print 'y1',(y1.sum()) *1.0/test_size
+print 'y2',(y2.sum()) *1.0/test_size
+print 'y3',(y3.sum()) *1.0/test_size
+print 'y4',(y4.sum()) *1.0/test_size
