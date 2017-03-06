@@ -5,6 +5,7 @@
     Generate Image CAPTCHAs, just the normal image CAPTCHAs you are using.
 """
 
+import math
 import os
 import random
 from PIL import Image
@@ -97,11 +98,11 @@ class ImageCaptcha(_Captcha):
     :param fonts: Fonts to be used to generate CAPTCHA images.
     :param font_sizes: Random choose a font size from this parameters.
     """
-    def __init__(self, width=160, height=60, fonts=None, font_sizes=None):
+    def __init__(self, width=180, height=60, fonts=None, font_sizes=None):
         self._width = width
         self._height = height
         self._fonts = fonts or DEFAULT_FONTS
-        self._font_sizes = font_sizes or (46, 58, 68)
+        self._font_sizes = font_sizes or (38, 46, 49)
         self._truefonts = []
 
     @property
@@ -116,20 +117,66 @@ class ImageCaptcha(_Captcha):
         return self._truefonts
 
     @staticmethod
+    def arc(draw, bbox, start, end, fill, width=1, segments=100):
+        """
+        Hack that looks similar to PIL's draw.arc(), but can specify a line width.
+        """
+        # radians
+        start *= math.pi / 180
+        end *= math.pi / 180
+
+        # angle step
+        da = (end - start) / segments
+
+        # shift end points with half a segment angle
+        start -= da / 2
+        end -= da / 2
+
+        # ellips radii
+        rx = (bbox[2] - bbox[0]) / 2
+        ry = (bbox[3] - bbox[1]) / 2
+
+        # box centre
+        cx = bbox[0] + rx
+        cy = bbox[1] + ry
+
+        # segment length
+        l = (rx+ry) * da / 2.0
+
+        for i in range(segments):
+
+            # angle centre
+            a = start + (i+0.5) * da
+
+            # x,y centre
+            x = cx + math.cos(a) * rx
+            y = cy + math.sin(a) * ry
+
+            # derivatives
+            dx = -math.sin(a) * rx / (rx+ry)
+            dy = math.cos(a) * ry / (rx+ry)
+
+            draw.line([(x-dx*l,y-dy*l), (x+dx*l, y+dy*l)], fill=fill, width=width)
+
+    @staticmethod
     def create_noise_curve(image, color):
         w, h = image.size
-        x1 = random.randint(0, int(w / 5))
-        x2 = random.randint(w - int(w / 5), w)
-        y1 = random.randint(h / 5, h - int(h / 5))
-        y2 = random.randint(y1, h - int(h / 5))
+        x1 = random.randint(0, int(w / 10))
+        x2 = random.randint(w - int(w / 10), w)
+        y1 = random.randint(h / 10, h - int(h / 10))
+        y2 = random.randint(y1, h - int(h / 10))
+
         points = [(x1, y1), (x2, y2)]
-        end = random.randint(160, 200)
-        start = random.randint(0, 20)
-        Draw(image).arc(points, start, end, fill=color)
+        end = random.randint(150, 200)
+        start = random.randint(0, 50)
+        #the default arc method does not support to modify width
+        #Draw(image).arc(points, start, end, fill=color)
+        bbox=[x1, y1, x2, y2]
+        ImageCaptcha.arc(Draw(image), bbox, start, end, color, 10, 100)
         return image
 
     @staticmethod
-    def create_noise_dots(image, color, width=3, number=30):
+    def create_noise_dots(image, color, width=3, number=80):
         draw = Draw(image)
         w, h = image.size
         while number:
@@ -187,6 +234,8 @@ class ImageCaptcha(_Captcha):
 
         text_width = sum([im.size[0] for im in images])
 
+        if text_width > self._width:
+            print text_width, self._width
         width = max(text_width, self._width)
         image = image.resize((width, self._height))
 
@@ -209,6 +258,7 @@ class ImageCaptcha(_Captcha):
         background = random_color(238, 255)
         color = random_color(0, 200, random.randint(220, 255))
         im = self.create_captcha_image(chars, color, background)
+        # we could comment the two lines if noise is not needed
         self.create_noise_dots(im, color)
         self.create_noise_curve(im, color)
         im = im.filter(ImageFilter.SMOOTH)
