@@ -1,10 +1,9 @@
 import random
 import sys
 
-import keras.backend as K
 import numpy as np
 from PIL import Image
-from keras.layers import Convolution2D, MaxPooling2D, AveragePooling2D, merge
+from keras.layers import Convolution2D, MaxPooling2D, AveragePooling2D
 from keras.layers import Input, Dense, Flatten, Dropout
 from keras.models import Model
 from keras.utils import np_utils
@@ -14,7 +13,7 @@ CLASS_NUM = 10
 
 
 def one_hot_encode(label):
-    return np.hstack(np_utils.to_categorical(np.int32(list(label)), CLASS_NUM))
+    return np_utils.to_categorical(np.int32(list(label)), CLASS_NUM)
 
 
 def load_data(path, train_ratio, _shape):
@@ -44,22 +43,6 @@ def load_data(path, train_ratio, _shape):
     return (train_datas, train_labels, test_datas, test_labels)
 
 
-def one_vector_metrics(y_true, y_pred):
-    num = 4
-    metrics = {}
-    _y_true = K.reshape(y_true, (-1, 4, CLASS_NUM))
-    _y_pred = K.reshape(y_pred, (-1, 4, CLASS_NUM))
-    _y = K.equal(K.argmax(_y_true), K.argmax(_y_pred))
-
-    y = K.equal(K.sum(K.cast(_y, 'int32'), -1), K.variable(num, 'int32'))
-    metrics['acc'] = K.mean(y)
-
-    yi = K.mean(_y, 0)
-    for i in xrange(num):
-        metrics['acc_' + str(i)] = yi[i]
-    return metrics
-
-
 def get_cnn_net(num, _shape):
     inputs = Input(shape=_shape)
     conv1 = Convolution2D(32, 5, 5, border_mode='same', activation='relu')(inputs)
@@ -78,14 +61,12 @@ def get_cnn_net(num, _shape):
     y_list = []
     for i in xrange(num):
         y_list.append(Dense(CLASS_NUM, activation='softmax')(flat))
-    y = merge(y_list, mode='concat')
-    # y = Dense(40, activation='softmax')(y)
-    model = Model(input=inputs, output=y)
-    plot(model, show_shapes=True, to_file='cnn_one_vector.png')
+    model = Model(input=inputs, output=y_list)
+    plot(model, show_shapes=True, to_file='cnn_four_vector.png')
     model.compile(loss='categorical_crossentropy',
-                  loss_weights=[1.],
+                  loss_weights=[1.] * num,
                   optimizer='Adam',
-                  metrics=[one_vector_metrics])
+                  metrics=['accuracy'])
     return model
 
 
@@ -95,10 +76,8 @@ def evaluate(model, test_datas, test_labels, batch_size):
     predict_labels = model.predict(test_datas, batch_size)
     _shape = test_labels.shape
     acc_all = np.asarray([True] * _shape[0])
-    for i in xrange(_shape[1] / CLASS_NUM):
-        start = i * CLASS_NUM
-        end = start + CLASS_NUM
-        acc_i = test_labels[:, start:end].argmax(1) == predict_labels[:, start:end].argmax(1)
+    for i in xrange(_shape[1]):
+        acc_i = test_labels[:, i, :].argmax(1) == predict_labels[i].argmax(1)
         acc_all = acc_all * acc_i
         metrics['accs'].append(acc_i.mean())
     metrics['acc'] = acc_all.mean()
@@ -117,15 +96,14 @@ shape = (height, width, channel)
 batch_size = 32
 train_ratio = 0.9
 (train_datas, train_labels, test_datas, test_labels) = load_data(data_path, train_ratio, shape)
-
 model = get_cnn_net(num_figure, shape)
-model.fit(train_datas, train_labels, batch_size, nb_epoch)
+model.fit(train_datas, list(np.transpose(train_labels, (1, 0, 2))), batch_size, nb_epoch)
 
 print "train evaluations:"
-model_metrics = model.evaluate(train_datas, train_labels, batch_size)
+model_metrics = model.evaluate(train_datas, list(np.transpose(train_labels, (1, 0, 2))), batch_size)
 print dict(zip(model.metrics_names, model_metrics))
 print evaluate(model, train_datas, train_labels, batch_size)
 print "test evaluations:"
-model_metrics = model.evaluate(test_datas, test_labels, batch_size)
+model_metrics = model.evaluate(test_datas, list(np.transpose(test_labels, (1, 0, 2))), batch_size)
 print dict(zip(model.metrics_names, model_metrics))
 print evaluate(model, test_datas, test_labels, batch_size)

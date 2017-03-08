@@ -4,7 +4,7 @@ import sys
 import keras.backend as K
 import numpy as np
 from PIL import Image
-from keras.layers import Convolution2D, MaxPooling2D, AveragePooling2D, merge
+from keras.layers import Convolution2D, MaxPooling2D, merge
 from keras.layers import Input, Dense, Flatten, Dropout
 from keras.models import Model
 from keras.utils import np_utils
@@ -66,22 +66,14 @@ def get_cnn_net(num, _shape):
     pool1 = MaxPooling2D(pool_size=(2, 2))(conv1)
     drop1 = Dropout(0.5)(pool1)
 
-    conv2 = Convolution2D(32, 5, 5, activation='relu')(drop1)
-    pool2 = AveragePooling2D(pool_size=(2, 2))(conv2)
-    drop2 = Dropout(0.15)(pool2)
-
-    conv3 = Convolution2D(32, 3, 3, activation='relu')(drop2)
-    pool3 = AveragePooling2D(pool_size=(2, 2))(conv3)
-    drop3 = Dropout(0.15)(pool3)
-
-    flat = Flatten()(drop3)
+    flat = Flatten()(drop1)
     y_list = []
     for i in xrange(num):
         y_list.append(Dense(CLASS_NUM, activation='softmax')(flat))
     y = merge(y_list, mode='concat')
     # y = Dense(40, activation='softmax')(y)
     model = Model(input=inputs, output=y)
-    plot(model, show_shapes=True, to_file='cnn_one_vector.png')
+    plot(model, show_shapes=True, to_file='cnn_3.png')
     model.compile(loss='categorical_crossentropy',
                   loss_weights=[1.],
                   optimizer='Adam',

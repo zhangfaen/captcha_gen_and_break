@@ -1,14 +1,12 @@
-import random
-import sys
-
+from keras.layers import Input, Dense, Flatten, Activation
 import keras.backend as K
-import numpy as np
-from PIL import Image
-from keras.layers import Convolution2D, MaxPooling2D, AveragePooling2D, merge
-from keras.layers import Input, Dense, Flatten, Dropout
-from keras.models import Model
+from keras.models import Sequential, Model
 from keras.utils import np_utils
 from keras.utils.visualize_util import plot
+import random
+import numpy as np
+import sys
+from PIL import Image, ImageFilter
 
 CLASS_NUM = 10
 
@@ -25,9 +23,11 @@ def load_data(path, train_ratio, _shape):
     width = _shape[1]
     for i, line in enumerate(input_file):
         img = Image.open(path + '/' + str(i) + ".png")
-        data = img.resize([width, height])
-        data = np.multiply(data, 1 / 255.0)
-        data = np.asarray(data)
+        img = img.resize([width, height])
+        img = img.filter(ImageFilter.MaxFilter).filter(ImageFilter.MinFilter)
+        img = img.convert('L')
+        data = np.asarray(img)
+        data = np.divide(data, int(np.mean(data)))
         datas.append(data)
         labels.append(one_hot_encode(line.strip()))
     input_file.close()
@@ -62,26 +62,12 @@ def one_vector_metrics(y_true, y_pred):
 
 def get_cnn_net(num, _shape):
     inputs = Input(shape=_shape)
-    conv1 = Convolution2D(32, 5, 5, border_mode='same', activation='relu')(inputs)
-    pool1 = MaxPooling2D(pool_size=(2, 2))(conv1)
-    drop1 = Dropout(0.5)(pool1)
-
-    conv2 = Convolution2D(32, 5, 5, activation='relu')(drop1)
-    pool2 = AveragePooling2D(pool_size=(2, 2))(conv2)
-    drop2 = Dropout(0.15)(pool2)
-
-    conv3 = Convolution2D(32, 3, 3, activation='relu')(drop2)
-    pool3 = AveragePooling2D(pool_size=(2, 2))(conv3)
-    drop3 = Dropout(0.15)(pool3)
-
-    flat = Flatten()(drop3)
-    y_list = []
-    for i in xrange(num):
-        y_list.append(Dense(CLASS_NUM, activation='softmax')(flat))
-    y = merge(y_list, mode='concat')
-    # y = Dense(40, activation='softmax')(y)
+    flat = Flatten()(inputs)
+    d1 = Dense(100, activation='relu')(flat)
+    d2 = Dense(100, activation='relu')(d1)
+    y = Dense(40, activation='softmax')(d2)
     model = Model(input=inputs, output=y)
-    plot(model, show_shapes=True, to_file='cnn_one_vector.png')
+    plot(model, show_shapes=True, to_file='dnn.png')
     model.compile(loss='categorical_crossentropy',
                   loss_weights=[1.],
                   optimizer='Adam',
@@ -118,7 +104,8 @@ batch_size = 32
 train_ratio = 0.9
 (train_datas, train_labels, test_datas, test_labels) = load_data(data_path, train_ratio, shape)
 
-model = get_cnn_net(num_figure, shape)
+# model = get_cnn_net(num_figure,shape)
+model = get_cnn_net(num_figure, (height, width))
 model.fit(train_datas, train_labels, batch_size, nb_epoch)
 
 print "train evaluations:"

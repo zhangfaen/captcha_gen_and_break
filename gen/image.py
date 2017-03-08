@@ -8,10 +8,12 @@
 import math
 import os
 import random
+
 from PIL import Image
 from PIL import ImageFilter
 from PIL.ImageDraw import Draw
 from PIL.ImageFont import truetype
+
 try:
     from cStringIO import StringIO as BytesIO
 except ImportError:
@@ -29,11 +31,11 @@ if wheezy_captcha:
 else:
     __all__ = ['ImageCaptcha']
 
+table = []
+for i in range(256):
+    table.append(i * 1.97)
 
-table  =  []
-for  i  in  range( 256 ):
-    table.append( i * 1.97 )
-  
+
 class _Captcha(object):
     def generate(self, chars, format='png'):
         """Generate an Image Captcha of the given characters.
@@ -58,6 +60,7 @@ class _Captcha(object):
 
 class WheezyCaptcha(_Captcha):
     """Create an image CAPTCHA with wheezy.captcha."""
+
     def __init__(self, width=200, height=75, fonts=None):
         self._width = width
         self._height = height
@@ -98,6 +101,7 @@ class ImageCaptcha(_Captcha):
     :param fonts: Fonts to be used to generate CAPTCHA images.
     :param font_sizes: Random choose a font size from this parameters.
     """
+
     def __init__(self, width=180, height=60, fonts=None, font_sizes=None):
         self._width = width
         self._height = height
@@ -110,10 +114,10 @@ class ImageCaptcha(_Captcha):
         if self._truefonts:
             return self._truefonts
         self._truefonts = tuple([
-            truetype(n, s)
-            for n in self._fonts
-            for s in self._font_sizes
-        ])
+                                    truetype(n, s)
+                                    for n in self._fonts
+                                    for s in self._font_sizes
+                                    ])
         return self._truefonts
 
     @staticmethod
@@ -141,22 +145,21 @@ class ImageCaptcha(_Captcha):
         cy = bbox[1] + ry
 
         # segment length
-        l = (rx+ry) * da / 2.0
+        l = (rx + ry) * da / 2.0
 
         for i in range(segments):
-
             # angle centre
-            a = start + (i+0.5) * da
+            a = start + (i + 0.5) * da
 
             # x,y centre
             x = cx + math.cos(a) * rx
             y = cy + math.sin(a) * ry
 
             # derivatives
-            dx = -math.sin(a) * rx / (rx+ry)
-            dy = math.cos(a) * ry / (rx+ry)
+            dx = -math.sin(a) * rx / (rx + ry)
+            dy = math.cos(a) * ry / (rx + ry)
 
-            draw.line([(x-dx*l,y-dy*l), (x+dx*l, y+dy*l)], fill=fill, width=width)
+            draw.line([(x - dx * l, y - dy * l), (x + dx * l, y + dy * l)], fill=fill, width=width)
 
     @staticmethod
     def create_noise_curve(image, color):
@@ -169,9 +172,9 @@ class ImageCaptcha(_Captcha):
         points = [(x1, y1), (x2, y2)]
         end = random.randint(150, 200)
         start = random.randint(0, 50)
-        #the default arc method does not support to modify width
-        #Draw(image).arc(points, start, end, fill=color)
-        bbox=[x1, y1, x2, y2]
+        # the default arc method does not support to modify width
+        # Draw(image).arc(points, start, end, fill=color)
+        bbox = [x1, y1, x2, y2]
         ImageCaptcha.arc(Draw(image), bbox, start, end, color, 10, 100)
         return image
 
