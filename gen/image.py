@@ -18,18 +18,11 @@ try:
     from cStringIO import StringIO as BytesIO
 except ImportError:
     from io import BytesIO
-try:
-    from wheezy.captcha import image as wheezy_captcha
-except ImportError:
-    wheezy_captcha = None
 
 DATA_DIR = os.path.join(os.path.abspath(os.path.dirname(__file__)), 'data')
 DEFAULT_FONTS = [os.path.join(DATA_DIR, 'DroidSansMono.ttf')]
 
-if wheezy_captcha:
-    __all__ = ['ImageCaptcha', 'WheezyCaptcha']
-else:
-    __all__ = ['ImageCaptcha']
+__all__ = ['ImageCaptcha']
 
 table = []
 for i in range(256):
@@ -56,35 +49,6 @@ class _Captcha(object):
         """
         im = self.generate_image(chars)
         return im.save(output, format=format)
-
-
-class WheezyCaptcha(_Captcha):
-    """Create an image CAPTCHA with wheezy.captcha."""
-
-    def __init__(self, width=200, height=75, fonts=None):
-        self._width = width
-        self._height = height
-        self._fonts = fonts or DEFAULT_FONTS
-
-    def generate_image(self, chars):
-        text_drawings = [
-            wheezy_captcha.warp(),
-            wheezy_captcha.rotate(),
-            wheezy_captcha.offset(),
-        ]
-        fn = wheezy_captcha.captcha(
-            drawings=[
-                wheezy_captcha.background(),
-                wheezy_captcha.text(fonts=self._fonts, drawings=text_drawings),
-                wheezy_captcha.curve(),
-                wheezy_captcha.noise(),
-                wheezy_captcha.smooth(),
-            ],
-            width=self._width,
-            height=self._height,
-        )
-        return fn(chars)
-
 
 class ImageCaptcha(_Captcha):
     """Create an image CAPTCHA.

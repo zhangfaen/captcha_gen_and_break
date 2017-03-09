@@ -60,7 +60,7 @@ def one_vector_metrics(y_true, y_pred):
     return metrics
 
 
-def get_cnn_net(num, _shape):
+def get_nn_net(num, _shape):
     inputs = Input(shape=_shape)
     flat = Flatten()(inputs)
     d1 = Dense(100, activation='relu')(flat)
@@ -104,8 +104,7 @@ batch_size = 32
 train_ratio = 0.9
 (train_datas, train_labels, test_datas, test_labels) = load_data(data_path, train_ratio, shape)
 
-# model = get_cnn_net(num_figure,shape)
-model = get_cnn_net(num_figure, (height, width))
+model = get_nn_net(num_figure, (height, width))
 model.fit(train_datas, train_labels, batch_size, nb_epoch)
 
 print "train evaluations:"

@@ -97,7 +97,7 @@ def evaluate(model, test_datas, test_labels, batch_size):
     return metrics
 
 
-data_path = '../gen/captcha4_level3/'
+data_path = '../gen/captcha_data4/'
 nb_epoch = 20
 # data_path = sys.argv[1]
 # nb_epoch = int(sys.argv[2])

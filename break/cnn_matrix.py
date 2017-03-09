@@ -101,7 +101,7 @@ def evaluate(model, test_datas, test_labels, batch_size):
     return metrics
 
 
-data_path = '../gen/captcha4_level3/'
+data_path = '../gen/captcha_data4/'
 nb_epoch = 20
 # data_path = sys.argv[1]
 # nb_epoch = int(sys.argv[2])
@@ -114,7 +114,14 @@ batch_size = 32
 train_ratio = 0.9
 (train_datas, train_labels, test_datas, test_labels) = load_data(data_path, train_ratio, shape)
 model = get_cnn_net(num_figure, shape)
+t0 = time.time()
 model.fit(train_datas, train_labels, batch_size, nb_epoch)
+t1 = time.time()
+print t1 - t0
+json_string = model.to_json()
+open('cnn_matrix.json','w').write(json_string)
+model.save_weights('cnn_matrix.h5')
+
 
 print "train evaluations:"
 model_metrics = model.evaluate(train_datas, train_labels, batch_size)
