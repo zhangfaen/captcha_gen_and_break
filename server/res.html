@@ -1,0 +1,31 @@
+<html>
+<head>
+<script
+  src="http://code.jquery.com/jquery-3.1.1.min.js"
+  integrity="sha256-hVVnYaiADRTO2PzUGmuLJr8BLUSjGIZsDYGmIJLv2b8="
+  crossorigin="anonymous"></script>
+<style type="text/css">
+  table{border:solid 1px;text-align:center;width:800px;margin:auto;border:1px solid;border-width:1px 1px 1px 1px;}
+  td{border:solid 1px;width:800px;border-width:1px 0px 0px 0px;}
+  tr{height:100px;border-width:1px 1px 1px 1px;}
+  </style>
+</head><body>
+<h2 style='text-align:center'>Captcha Demo</h2>
+<h2 style='text-align:center'>
+<div style='text-align:center'>
+<form  method="POST" enctype="multipart/form-data" action="">
+<p><input id='input0' style='font-size:20;height:30px' type="file" onchange="previewImage(this,'img0')" name="file0"></p>
+<p><input style='font-size:20;height:30px' type="submit" ></p>
+</form>
+</div>
+  <table>
+        <tbody>
+  <tr><th>image</th>
+  </tr>
+  <tr>
+    <td>
+    <img src='http://180.76.138.135:8080/static/0.png'>
+    </td>
+  </tr>
+  <tr>
+    <td>

@@ -16,6 +16,7 @@ for i in xrange(num):
     labels_file.write(label + '\n')
 labels_file.close()
 
+'''
 # generate captcha pngs with six numbers
 image = ImageCaptcha(width=180, height=60, fonts=['comic.ttf'], font_sizes=(38, 46, 49))
 data_dir = 'captcha_data6/'
@@ -26,3 +27,4 @@ for i in xrange(num):
     image.write(label, data_dir + str(i) + '.png')
     labels_file.write(label + '\n')
 labels_file.close()
+'''

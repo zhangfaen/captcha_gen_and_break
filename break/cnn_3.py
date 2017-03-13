@@ -71,7 +71,6 @@ def get_cnn_net(num, _shape):
     for i in xrange(num):
         y_list.append(Dense(CLASS_NUM, activation='softmax')(flat))
     y = merge(y_list, mode='concat')
-    # y = Dense(40, activation='softmax')(y)
     model = Model(input=inputs, output=y)
     plot(model, show_shapes=True, to_file='cnn_3.png')
     model.compile(loss='categorical_crossentropy',
@@ -111,7 +110,13 @@ train_ratio = 0.9
 (train_datas, train_labels, test_datas, test_labels) = load_data(data_path, train_ratio, shape)
 
 model = get_cnn_net(num_figure, shape)
+t0 = time.time()
 model.fit(train_datas, train_labels, batch_size, nb_epoch)
+t1 = time.time()
+print t1 - t0
+json_string = model.to_json()
+open('cnn_3.json','w').write(json_string)
+model.save_weights('cnn_3.h5')
 
 print "train evaluations:"
 model_metrics = model.evaluate(train_datas, train_labels, batch_size)
