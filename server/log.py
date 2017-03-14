@@ -1,17 +1,6 @@
 # -*- coding: utf-8 -*-
 # !/usr/bin/env python
 
-################################################################################
-#
-# Copyright (c) 2016 Baidu.com, Inc. All Rights Reserved
-#
-################################################################################
-"""
-This module provide 
-    Authors: niuchong01(niuchong01@baidu.com)
-Date:    2016/11/02 
-"""
-
 import os
 import logging
 import logging.handlers
