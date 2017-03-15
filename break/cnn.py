@@ -1,3 +1,5 @@
+#!/usr/bin/python
+# -*- coding: utf-8 -*-
 # Packages needed to run this script
 # PIL, h5py, keras, tensorflow
 
@@ -19,22 +21,27 @@ CLASS_NUM = 10
 def one_hot_encode(label):
     return np_utils.to_categorical(np.int32(list(label)), CLASS_NUM)
 
-def one_hot_decode(label):
-    return  label.argmax()
 
-def load_data(path,  _shape):
+def one_hot_decode(label):
+    return label.argmax()
+
+
+def load_data(path, _shape):
     """
         Load images and load corresponding labels.
         image file name looks like 789.png, whose label is line 789 of labels.txt
     """
+
     datas = []
     labels = []
     input_file = open(path + '/labels.txt')
+
     # _shape (height,width,channel)
+
     height = _shape[0]
     width = _shape[1]
-    for i, line in enumerate(input_file):
-        img = Image.open(path + '/' + str(i) + ".png")
+    for (i, line) in enumerate(input_file):
+        img = Image.open(path + '/' + str(i) + '.png')
         data = img.resize([width, height])
         data = np.multiply(data, 1 / 255.0)
         data = np.asarray(data)
@@ -45,9 +52,11 @@ def load_data(path,  _shape):
     # datas.shape : (num_of_samples, height, width, channel)
     # labels : [labels_for_0_digit, labels_for_1_digit,l labels_for_2_digit, labels_for_3_digit]
     # label.shape : list(num_of_samples, CLASS_NUM)
+
     labels = list(np.transpose(np.stack(labels), (1, 0, 2)))
     datas = np.stack(datas)
-    return (datas,labels)
+    return (datas, labels)
+
 
 def get_cnn_net(num, _shape):
     """
@@ -56,8 +65,10 @@ def get_cnn_net(num, _shape):
         Each output is for one digit in the image.
         Finally we optimize the 4 output at the same time, each ouput contribute 1/4 the total loss.
     """
+
     inputs = Input(shape=_shape)
-    conv1 = Convolution2D(32, 5, 5, border_mode='same', activation='relu')(inputs)
+    conv1 = Convolution2D(32, 5, 5, border_mode='same',
+                          activation='relu')(inputs)
     pool1 = MaxPooling2D(pool_size=(2, 2))(conv1)
     drop1 = Dropout(0.5)(pool1)
 
@@ -75,10 +86,8 @@ def get_cnn_net(num, _shape):
         y_list.append(Dense(CLASS_NUM, activation='softmax')(flat))
     model = Model(input=inputs, output=y_list)
     plot(model, show_shapes=True, to_file='cnn.png')
-    model.compile(loss='categorical_crossentropy',
-                  loss_weights=[1.] * num,
-                  optimizer='Adam',
-                  metrics=['accuracy'])
+    model.compile(loss='categorical_crossentropy', loss_weights=[1.]
+                  * num, optimizer='Adam', metrics=['accuracy'])
     return model
 
 
@@ -89,32 +98,36 @@ def evaluate(model, test_datas, test_labels):
     num_figure = len(test_labels)
     test_size = test_labels[0].shape[0]
     acc_all = 0
-    acc_each = [0,0,0,0]
+    acc_each = [0, 0, 0, 0]
     for i in xrange(test_size):
         flags = True
         for j in xrange(num_figure):
-            flag = one_hot_decode(test_labels[j][i]) == one_hot_decode(predict_labels[j][i])
-            if(flag):
+            flag = one_hot_decode(test_labels[j][i]) \
+                == one_hot_decode(predict_labels[j][i])
+            if flag:
                 acc_each[j] = acc_each[j] + 1
             flags = flags and flag
-        if(flags):
+        if flags:
             acc_all = acc_all + 1
 
     for j in xrange(num_figure):
-        metrics['accs'].append(acc_each[j] * 1.0 /test_size)
-    metrics['acc'] = acc_all * 1.0 / test_size
+        metrics['accs'].append(acc_each[j] * 1. / test_size)
+    metrics['acc'] = acc_all * 1. / test_size
     return metrics
+
 
 def save_model(model):
     json_string = model.to_json()
-    model_file = open('cnn.json','w')
+    model_file = open('cnn.json', 'w')
     model_file.write(json_string)
     model_file.close()
     model.save_weights('cnn.h5')
+
+
 if __name__ == '__main__':
     data_path_prefix = '../gen/4'
-    if(data_path_prefix.endswith('/')):
-        data_path_prefix=data_path_prefix[:-1]
+    if data_path_prefix.endswith('/'):
+        data_path_prefix = data_path_prefix[:-1]
     train_data_path = data_path_prefix + '_train/'
     test_data_path = data_path_prefix + '_test/'
     nb_epoch = 10
@@ -127,16 +140,18 @@ if __name__ == '__main__':
     (test_datas, test_labels) = load_data(test_data_path, shape)
     model = get_cnn_net(num_figure, shape)
     t0 = time.time()
-    model.fit(train_datas, train_labels, nb_epoch = nb_epoch)
+    model.fit(train_datas, train_labels, nb_epoch=nb_epoch)
     t1 = time.time()
-    print 'training time : ' , t1 - t0
+    print 'training time : ', t1 - t0
     save_model(model)
 
-    print "train evaluations:"
+    print 'train evaluations:'
     model_metrics = model.evaluate(train_datas, train_labels)
     print dict(zip(model.metrics_names, model_metrics))
     print evaluate(model, train_datas, train_labels)
-    print "test evaluations:"
+    print 'test evaluations:'
     model_metrics = model.evaluate(test_datas, test_labels)
     print dict(zip(model.metrics_names, model_metrics))
     print evaluate(model, test_datas, test_labels)
+
+            
