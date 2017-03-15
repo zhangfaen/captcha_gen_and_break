@@ -1,3 +1,6 @@
+# Packages needed to run this script
+# PIL, h5py, keras, tensorflow
+
 import random
 import sys
 import time
