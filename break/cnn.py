@@ -19,8 +19,10 @@ CLASS_NUM = 10
 def one_hot_encode(label):
     return np_utils.to_categorical(np.int32(list(label)), CLASS_NUM)
 
+def one_hot_decode(label):
+    return  label.argmax()
 
-def load_data(path, train_ratio, _shape):
+def load_data(path,  _shape):
     """
         Load images and load corresponding labels.
         image file name looks like 789.png, whose label is line 789 of labels.txt
@@ -28,6 +30,7 @@ def load_data(path, train_ratio, _shape):
     datas = []
     labels = []
     input_file = open(path + '/labels.txt')
+    # _shape (height,width,channel)
     height = _shape[0]
     width = _shape[1]
     for i, line in enumerate(input_file):
@@ -39,17 +42,12 @@ def load_data(path, train_ratio, _shape):
         labels.append(one_hot_encode(line.strip()))
     input_file.close()
 
-    datas_labels = zip(datas, labels)
-    random.shuffle(datas_labels)
-    (datas, labels) = zip(*datas_labels)
-    size = len(labels)
-    train_size = int(size * train_ratio)
-    train_datas = np.stack(datas[0: train_size])
-    train_labels = np.stack(labels[0: train_size])
-    test_datas = np.stack(datas[train_size: size])
-    test_labels = np.stack(labels[train_size: size])
-    return (train_datas, train_labels, test_datas, test_labels)
-
+    # datas.shape : (size,height * width * channel)
+    # labels : [label_0,label_1,label_2,label_3]
+    # label.shape : list(size, CLASS_NUM)
+    labels = list(np.transpose(np.stack(labels), (1, 0, 2)))
+    datas = np.stack(datas)
+    return (datas,labels)
 
 def get_cnn_net(num, _shape):
     """
@@ -84,43 +82,61 @@ def get_cnn_net(num, _shape):
     return model
 
 
-def evaluate(model, test_datas, test_labels, batch_size):
+def evaluate(model, test_datas, test_labels):
     metrics = {}
     metrics['accs'] = []
-    predict_labels = model.predict(test_datas, batch_size)
-    _shape = test_labels.shape
-    acc_all = np.asarray([True] * _shape[0])
-    for i in xrange(_shape[1]):
-        acc_i = test_labels[:, i, :].argmax(1) == predict_labels[i].argmax(1)
-        acc_all = acc_all * acc_i
-        metrics['accs'].append(acc_i.mean())
-    metrics['acc'] = acc_all.mean()
+    predict_labels = model.predict(test_datas)
+    num_figure = len(test_labels)
+    test_size = test_labels[0].shape[0]
+    acc_all = 0
+    acc_each = [0,0,0,0]
+    for i in xrange(test_size):
+        flags = True
+        for j in xrange(num_figure):
+            flag = one_hot_decode(test_labels[j][i]) == one_hot_decode(predict_labels[j][i])
+            if(flag):
+                acc_each[j] = acc_each[j] + 1
+                flags = flags and flag
+        if(flags):
+            acc_all = acc_all + 1
+
+    for j in xrange(num_figure):
+        metrics['accs'].append(acc_each[j] * 1.0 /test_size)
+    metrics['acc'] = acc_all * 1.0 / test_size
     return metrics
 
+def save_model(model):
+    json_string = model.to_json()
+    model_file = open('cnn.json','w')
+    model_file.write(json_string)
+    model_file.close()
+    model.save_weights('cnn.h5')
+if __name__ == '__main__':
+    data_path_prefix = '../gen/4'
+    if(data_path_prefix.endswith('/')):
+        data_path_prefix=data_path_prefix[:-1]
+    train_data_path = data_path_prefix + '_train/'
+    test_data_path = data_path_prefix + '_test/'
+    nb_epoch = 10
+    num_figure = 4
+    width = 160
+    height = 60
+    channel = 3
+    shape = (height, width, channel)
+    (train_datas, train_labels) = load_data(train_data_path, shape)
+    (test_datas, test_labels) = load_data(test_data_path, shape)
+    model = get_cnn_net(num_figure, shape)
+    t0 = time.time()
+    model.fit(train_datas, train_labels, nb_epoch = nb_epoch)
+    t1 = time.time()
+    print 'training time : ' , t1 - t0
+    save_model(model)
 
-data_path = '../gen/captcha_data4/'
-nb_epoch = 20
-num_figure = 4
-width = 160
-height = 60
-channel = 3
-shape = (height, width, channel)
-batch_size = 32
-train_ratio = 0.9
-(train_datas, train_labels, test_datas, test_labels) = load_data(data_path, train_ratio, shape)
-model = get_cnn_net(num_figure, shape)
-t0 = time.time()
-model.fit(train_datas, list(np.transpose(train_labels, (1, 0, 2))), batch_size, nb_epoch)
-t1 = time.time()
-print t1 - t0
-
-model.save_weights('cnn.h5')
-
-print "train evaluations:"
-model_metrics = model.evaluate(train_datas, list(np.transpose(train_labels, (1, 0, 2))), batch_size)
-print dict(zip(model.metrics_names, model_metrics))
-print evaluate(model, train_datas, train_labels, batch_size)
-print "test evaluations:"
-model_metrics = model.evaluate(test_datas, list(np.transpose(test_labels, (1, 0, 2))), batch_size)
-print dict(zip(model.metrics_names, model_metrics))
-print evaluate(model, test_datas, test_labels, batch_size)
+    print "train evaluations:"
+    model_metrics = model.evaluate(train_datas, train_labels)
+    print dict(zip(model.metrics_names, model_metrics))
+    print evaluate(model, train_datas, train_labels)
+    print "test evaluations:"
+    model_metrics = model.evaluate(test_datas, test_labels)
+    print dict(zip(model.metrics_names, model_metrics))
+    print evaluate(model, test_datas, test_labels)
