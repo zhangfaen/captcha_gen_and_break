@@ -42,9 +42,9 @@ def load_data(path,  _shape):
         labels.append(one_hot_encode(line.strip()))
     input_file.close()
 
-    # datas.shape : (size,height * width * channel)
-    # labels : [label_0,label_1,label_2,label_3]
-    # label.shape : list(size, CLASS_NUM)
+    # datas.shape : (num_of_samples, height, width, channel)
+    # labels : [labels_for_0_digit, labels_for_1_digit,l labels_for_2_digit, labels_for_3_digit]
+    # label.shape : list(num_of_samples, CLASS_NUM)
     labels = list(np.transpose(np.stack(labels), (1, 0, 2)))
     datas = np.stack(datas)
     return (datas,labels)
@@ -96,7 +96,7 @@ def evaluate(model, test_datas, test_labels):
             flag = one_hot_decode(test_labels[j][i]) == one_hot_decode(predict_labels[j][i])
             if(flag):
                 acc_each[j] = acc_each[j] + 1
-                flags = flags and flag
+            flags = flags and flag
         if(flags):
             acc_all = acc_all + 1
 
