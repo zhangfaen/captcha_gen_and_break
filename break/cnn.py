@@ -130,7 +130,7 @@ if __name__ == '__main__':
         data_path_prefix = data_path_prefix[:-1]
     train_data_path = data_path_prefix + '_train/'
     test_data_path = data_path_prefix + '_test/'
-    nb_epoch = 10
+    nb_epoch = 20
     num_figure = 4
     width = 160
     height = 60

@@ -35,7 +35,7 @@ def gen_6(size,output):
     labels_file.close()
 
 if __name__ == '__main__':
-    size = 1000
+    size = 5000
     train_ratio = 0.9
     num_figure = '4'
     output_prefix = '4'
