@@ -1,0 +1,2 @@
+# captcha_gen_and_break
+利用这个Github repo，讲一讲我如何用卷积神经网络破解如下的验证码图片
